@@ -1,10 +1,4 @@
-function path = Dubins_edit_2()
-
-init_place = [2.8*rand-1.4, 2.8*rand-1.4, 2*pi*rand-pi];
-last_place = [2.8*rand-1.4, 1.5 , pi/2];
-
-%this line for the parking phase of the vehicle.
-last_place = [last_place(1), last_place(2)-0.25, last_place(3)];
+function path = Dubins_edit_2(init_place, last_place)
 
 radius = 1.5;
 

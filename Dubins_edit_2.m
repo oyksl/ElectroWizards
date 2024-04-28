@@ -1,8 +1,16 @@
-function path = Dubins_edit_2(init_place, last_place)
+function path = Dubins_edit_2()
+
+clearvars -except path
+
+init_place = [3*rand-1.5, 3*rand-1.5, 2*pi*rand-pi]; %-pi neden var
+last_place = [3*rand-1.5, 1.5 , pi/2];
+
+%this line for the parking phase of the vehicle.
+last_place = [last_place(1), last_place(2)-0.25, last_place(3)];
 
 radius = 1.5;
 
-%a_time = tic;
+a_time = tic;
 path = dubins_curve(init_place, last_place, radius, 0.1);
 
 while ((min(path(:,1))<-1.4 || min(path(:,2))<-1.4 || max(path(:,1))>1.4 || max(path(:,2))>1.4) == 1)
@@ -109,7 +117,7 @@ function path = dubins_curve(p1, p2, r, stepsize, quiet)
              p2(1)*cos(p2(3)) + p2(2)*sin(p2(3)) ];
         X = T \ Y;
         if( norm(X-reshape(p1(1:2), [2,1]),2) == r ) && ( norm(X-reshape(p2(1:2),[2,1]),2) == r )
-            %warning('p2 lies on the turning circle from the p2, dubins curve may be suboptimal');
+            warning('p2 lies on the turning circle from the p2, dubins curve may be suboptimal');
         end
     end
         
@@ -245,7 +253,6 @@ end
  segment type, and its corresponding parameter
 %}
 function seg_end = dubins_segment(seg_param, seg_init, seg_type)
-    global seg_end;
     L_SEG = 1;
     S_SEG = 2;
     R_SEG = 3;
@@ -313,7 +320,6 @@ function param = dubins_core(p1, p2, r)
     beta  = mod((p2(3) - theta), 2*pi);
 
     % Second, we find all possible curves
-    global test_param;
     best_word = -1;
     best_cost = -1;
     test_param(1,:) = dubins_LSL(alpha, beta, d);
@@ -343,105 +349,99 @@ function param = dubins_core(p1, p2, r)
     end
 end
 
-function param1 = dubins_LSL(alpha, beta, d)
-    
+function param = dubins_LSL(alpha, beta, d)
     tmp0 = d + sin(alpha) - sin(beta);
     p_squared = 2 + (d*d) -(2*cos(alpha - beta)) + (2*d*(sin(alpha) - sin(beta)));
     if( p_squared < 0 )
-        param1 = [-1, -1, -1];
+        param = [-1, -1, -1];
         return;
     else
         tmp1 = atan2( (cos(beta)-cos(alpha)), tmp0 );
         t = mod((-alpha + tmp1 ), 2*pi);
         p = sqrt( p_squared );
         q = mod((beta - tmp1 ), 2*pi);
-        param1(1) = t; 
-        param1(2) = p; 
-        param1(3) = q;
+        param(1) = t; 
+        param(2) = p; 
+        param(3) = q;
         return ;
     end
 end
-function param2 = dubins_LSR(alpha, beta, d)
-    
+function param = dubins_LSR(alpha, beta, d)
     p_squared = -2 + (d*d) + (2*cos(alpha - beta)) + (2*d*(sin(alpha)+sin(beta)));
     if( p_squared < 0 )
-        param2 = [-1, -1, -1];
+        param = [-1, -1, -1];
         return;
     else
         p    = sqrt( p_squared );
         tmp2 = atan2( (-cos(alpha)-cos(beta)), (d+sin(alpha)+sin(beta)) ) - atan2(-2.0, p);
         t    = mod((-alpha + tmp2), 2*pi);
         q    = mod(( -mod((beta), 2*pi) + tmp2 ), 2*pi);
-        param2(1) = t; 
-        param2(2) = p; 
-        param2(3) = q;
+        param(1) = t; 
+        param(2) = p; 
+        param(3) = q;
         return ;
     end
 end
-function param3 = dubins_RSL(alpha, beta, d)
-    
+function param = dubins_RSL(alpha, beta, d)
     p_squared = (d*d) -2 + (2*cos(alpha - beta)) - (2*d*(sin(alpha)+sin(beta)));
     if( p_squared< 0 ) 
-        param3 = [-1, -1, -1];
+        param = [-1, -1, -1];
         return;
     else
         p    = sqrt( p_squared );
         tmp2 = atan2( (cos(alpha)+cos(beta)), (d-sin(alpha)-sin(beta)) ) - atan2(2.0, p);
         t    = mod((alpha - tmp2), 2*pi);
         q    = mod((beta - tmp2), 2*pi);
-        param3(1) = t;
-        param3(2) = p; 
-        param3(3) = q;
+        param(1) = t;
+        param(2) = p; 
+        param(3) = q;
         return ;
     end
 end
-function param4 = dubins_RSR(alpha, beta, d)
-    
+function param = dubins_RSR(alpha, beta, d)
     tmp0 = d-sin(alpha)+sin(beta);
     p_squared = 2 + (d*d) -(2*cos(alpha - beta)) + (2*d*(sin(beta)-sin(alpha)));
     if( p_squared < 0 )
-        param4 = [-1, -1, -1];
+        param = [-1, -1, -1];
         return;
     else
         tmp1 = atan2( (cos(alpha)-cos(beta)), tmp0 );
         t = mod(( alpha - tmp1 ), 2*pi);
         p = sqrt( p_squared );
         q = mod(( -beta + tmp1 ), 2*pi);
-        param4(1) = t; 
-        param4(2) = p; 
-        param4(3) = q;
+        param(1) = t; 
+        param(2) = p; 
+        param(3) = q;
         return;
     end
 end
-function param5 = dubins_RLR(alpha, beta, d)
-    
+function param = dubins_RLR(alpha, beta, d)
     tmp_rlr = (6. - d*d + 2*cos(alpha - beta) + 2*d*(sin(alpha)-sin(beta))) / 8.;
     if( abs(tmp_rlr) > 1)
-        param5 = [-1, -1, -1];
+        param = [-1, -1, -1];
         return;
     else
         p = mod(( 2*pi - acos( tmp_rlr ) ), 2*pi);
         t = mod((alpha - atan2( cos(alpha)-cos(beta), d-sin(alpha)+sin(beta) ) + mod(p/2, 2*pi)), 2*pi);
         q = mod((alpha - beta - t + mod(p, 2*pi)), 2*pi);
-        param5(1) = t;
-        param5(2) = p;
-        param5(3) = q;
+        param(1) = t;
+        param(2) = p;
+        param(3) = q;
         
         return;
     end
 end
-function param6 = dubins_LRL(alpha, beta, d)
-    
+function param = dubins_LRL(alpha, beta, d)
     tmp_lrl = (6. - d*d + 2*cos(alpha - beta) + 2*d*(- sin(alpha) + sin(beta))) / 8.;
     if( abs(tmp_lrl) > 1)
-        param6 = [-1, -1, -1]; return;
+        param = [-1, -1, -1]; return;
     else
         p = mod(( 2*pi - acos( tmp_lrl ) ), 2*pi);
         t = mod((-alpha - atan2( cos(alpha)-cos(beta), d+sin(alpha)-sin(beta) ) + p/2), 2*pi);
         q = mod((mod(beta, 2*pi) - alpha -t + mod(p, 2*pi)), 2*pi);
-        param6(1) = t;
-        param6(2) = p;
-        param6(3) = q;
+        param(1) = t;
+        param(2) = p;
+        param(3) = q;
         return;
     end
 end
